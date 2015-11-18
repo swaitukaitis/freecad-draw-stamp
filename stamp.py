@@ -3,16 +3,16 @@ import numpy as np
 import Part as P
 import time as t
 import os
-import pickle 
+import pickle
 
 #Make FreeCAD vectors easier to work with
 def V(x):
     return(FC.Vector(x[0], x[1], x[2]))
-    
+
 #Physics input parameters
 n=-1
 D = 20.0
-theta = 80  
+theta = 80
 gap = 10.5
 
 #Technical input parameters
@@ -27,6 +27,7 @@ lBoltHole = 10.0
 dBoltHead = 5.5
 hBoltHead = 3.0
 sheathWidth = 4.0
+holderPlateHeight = 2.0
 
 #Derived input parameters
 height = gap*np.tan(theta*(np.pi/180))
@@ -67,15 +68,22 @@ P.show(stump)
 outerBottomPlate = P.makeCircle(D/2.+sheathWidth,  V([0,0,0]), V([0,0,1]))
 outerTopPlate = P.makeCircle(D/2.+gap+sheathWidth, V([0,0,height+sheathWidth]), V([0,0,1]))
 sheath = P.makeLoft([outerBottomPlate, outerTopPlate], True)
+
 stump.translate(V([0,0,sheathWidth]))
 sheath = sheath.cut(stump)
+
+holderPlateCavity = P.makeCylinder(D/2., holderPlateHeight+1.0, V([0,0,height]), V([0,0,1]) )
+sheat = sheath.cut(holderPlateCavity)
+
 boltHeadHole = P.makeCylinder(dBoltHead/2., hBoltHead+15.0, V([D/4.,0,sheathWidth-hBoltHead]), V([0,0,1]))
 sheath = sheath.cut(boltHeadHole)
 boltHeadHole.translate(V([-D/2.,0,0]))
 sheath = sheath.cut(boltHeadHole)
+
 sheath.rotate(V([0,0,(height+sheathWidth)/2.]), V([1,0,0]), 180)
 baseAdapter.translate(V([0,0,sheathWidth]))
 sheath = sheath.fuse(baseAdapter)
+
 sheath.rotate(V([0,0,(sheathWidth+height+lShaft)/2]), V([1,0,0]), 180)
 sheath.translate(V([(D+sheathWidth+2*gap)+3,0,0]))
 sheath.exportStl(outFolder+'sheath.stl')
